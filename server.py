@@ -1,23 +1,24 @@
 #!/usr/bin/env python
 
 import http.server
-import socketserver
- 
+#import socketserver
+
 import os, sys
 import base64
 import json
-
+import time
+import re
 import argparse
 
 from cgi import parse_header, parse_multipart
 from urllib.parse import parse_qs
 
-
-#sys.path.append('./cgi-bin/wnet') 
-sys.path.append('./cgi-bin/paint_x2_unet') 
+#sys.path.append('./cgi-bin/wnet')
+sys.path.append('./cgi-bin/paint_x2_unet')
 import cgi_exe
-
-
+sys.path.append('./cgi-bin/helpers')
+from platformAdapter import OSHelper
+import http.server
 
 class MyHandler(http.server.CGIHTTPRequestHandler):
     def __init__(self,req,client_addr,server):
@@ -31,7 +32,7 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
         elif ctype == 'application/x-www-form-urlencoded':
             length = int(self.headers['content-length'])
             postvars = parse_qs(
-                    self.rfile.read(length), 
+                    self.rfile.read(length),
                     keep_blank_values=1)
         else:
             postvars = {}
@@ -40,13 +41,13 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
     def do_POST(self):
         form = self.parse_POST()
 
-         
+
         if "id" in form:
            id_str = form["id"][0]
            id_str = id_str.decode()
         else:
            id_str = "test"
-         
+
         if "line" in form:
            bin1 = form["line"][0]
            bin1 = bin1.decode().split(",")[1]
@@ -62,12 +63,12 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
            fout2 = open ( "./static/images/ref/"+id_str+".png", 'wb')
            fout2.write (bin2)
            fout2.close()
- 
+
 
         blur = 0
         if "blur" in form:
             blur = form["blur"][0].decode()
-            try: 
+            try:
                 blur = int(blur)
             except ValueError:
                 blur = 0
@@ -79,7 +80,7 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
                 painter.colorize_l(id_str)
         else:
             painter.colorize(id_str, blur=blur)
-        
+
         content = bytes("{ 'message':'The command Completed Successfully' , 'Status':'200 OK','success':true , 'used':"+str(args.gpu)+"}", "UTF-8")
         self.send_response(200)
         self.send_header("Content-type","application/json")
@@ -105,5 +106,3 @@ painter = cgi_exe.Painter( gpu = args.gpu )
 httpd = http.server.HTTPServer(( args.host, args.port ), MyHandler)
 print('serving at', args.host, ':', args.port, )
 httpd.serve_forever()
-
-
