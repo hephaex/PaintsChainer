@@ -21,19 +21,24 @@ from platformAdapter import OSHelper
 import http.server
 
 class MyHandler(http.server.CGIHTTPRequestHandler):
-    def __init__(self,req,client_addr,server):
-        http.server.CGIHTTPRequestHandler.__init__(self,req,client_addr,server)
+
+    t = []
+
+    def __init__(self, req, client_addr, server):
+        OSHelper.detect_environment()
+	http.server.CGIHTTPRequestHandler.__init__(
+	    self, req, client_addr, server)
 
     def parse_POST(self):
-        ctype, pdict = parse_header(self.headers['content-type'])
+	ctype, pdict = parse_header(self.headers['content-type'])
         pdict['boundary'] = bytes(pdict['boundary'], "utf-8")
         if ctype == 'multipart/form-data':
-            postvars = parse_multipart(self.rfile, pdict)
-        elif ctype == 'application/x-www-form-urlencoded':
+	    postvars = parse_multipart(self.rfile, pdict)
+	elif ctype == 'application/x-www-form-urlencoded':
             length = int(self.headers['content-length'])
             postvars = parse_qs(
-                    self.rfile.read(length),
-                    keep_blank_values=1)
+	        self.rfile.read(length),
+	        keep_blank_values=1)
         else:
             postvars = {}
         return postvars
@@ -89,6 +94,19 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
         self.wfile.write(content)
 
         return
+
+    def log_t(self):
+        if( args.debug ):
+            self.t.append(time.time())
+        return
+
+    def print_log(self):
+        if( args.debug ):
+            for i, j in zip(self.t, self.t[1:]):
+                print("time [sec]", j - i)
+                self.t = []
+        return
+
 
 parser = argparse.ArgumentParser(description='chainer line drawing colorization server')
 parser.add_argument('--gpu', '-g', type=int, default=0,
