@@ -84,7 +84,8 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
             if form["step"][0].decode() == "L":
                 painter.colorize_l(id_str)
         else:
-            painter.colorize(id_str, blur=blur)
+#            painter.colorize(id_str, blur=blur)
+            painter.colorize(id_str, form["step"][0].decode() if "step" in form else "C", blur=blur)
 
         content = bytes("{ 'message':'The command Completed Successfully' , 'Status':'200 OK','success':true , 'used':"+str(args.gpu)+"}", "UTF-8")
         self.send_response(200)
@@ -108,19 +109,21 @@ class MyHandler(http.server.CGIHTTPRequestHandler):
         return
 
 
-parser = argparse.ArgumentParser(description='chainer line drawing colorization server')
-parser.add_argument('--gpu', '-g', type=int, default=0,
-		help='GPU ID (negative value indicates CPU)')
-parser.add_argument('--port', '-p', type=int, default=8000,
-		help='using port')
-parser.add_argument('--host', '-ho', default='localhost',
-		help='using host')
-args = parser.parse_args()
+# set args
+if "__main__" in __name__:
+    parser = argparse.ArgumentParser(description='chainer line drawing colorization server')
+    parser.add_argument('--gpu', '-g', type=int, default=0,
+		        help='GPU ID (negative value indicates CPU)')
+    parser.add_argument('--port', '-p', type=int, default=8000,
+		        help='using port')
+    parser.add_argument('--host', '-ho', default='localhost',
+		        help='using host')
+    args = parser.parse_args()
 
-print('GPU: {}'.format(args.gpu))
+    print('GPU: {}'.format(args.gpu))
 
-painter = cgi_exe.Painter( gpu = args.gpu )
+    painter = cgi_exe.Painter( gpu = args.gpu )
 
-httpd = http.server.HTTPServer(( args.host, args.port ), MyHandler)
-print('serving at', args.host, ':', args.port, )
-httpd.serve_forever()
+    httpd = http.server.HTTPServer(( args.host, args.port ), MyHandler)
+    print('serving at', args.host, ':', args.port, )
+    httpd.serve_forever()
