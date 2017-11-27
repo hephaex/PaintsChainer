@@ -25,9 +25,6 @@ main code of colorization is in `cgi-bin/paint_x2_unet`
 to train 1st layer using GPU 0 `python train_128.py -g 0`
 to train 2nd layer using GPU 0 `python train_x2.py -g 0`
 
-## DEMO
-http://paintschainer.preferred.tech/
-
 ## Pre-Trained Models
 Download following model files to  cgi-bin/paint_x2_unet/models/
 
